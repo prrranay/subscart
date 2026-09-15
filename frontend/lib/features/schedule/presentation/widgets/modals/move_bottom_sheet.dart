@@ -30,12 +30,48 @@ class MoveBottomSheet extends ConsumerStatefulWidget {
 class _MoveBottomSheetState extends ConsumerState<MoveBottomSheet> {
   late String _selectedDate;
   late MealSlot _selectedSlot;
+  final ScrollController _dateScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.order.deliveryDate;
     _selectedSlot = widget.order.slot;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToDate(_selectedDate, animate: false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToDate(String dateStr, {bool animate = true}) {
+    if (!_dateScrollController.hasClients) return;
+    final dates = ref.read(scheduleDatesProvider);
+    final idx = dates.indexOf(dateStr);
+    if (idx != -1) {
+      // Each chip is ~88px wide (including padding and spacing)
+      final screenWidth = MediaQuery.of(context).size.width;
+      final targetOffset = (idx * 88.0) - (screenWidth / 2) + 44.0;
+      final clampedOffset = targetOffset.clamp(
+        0.0,
+        _dateScrollController.position.maxScrollExtent,
+      );
+
+      if (animate) {
+        _dateScrollController.animateTo(
+          clampedOffset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _dateScrollController.jumpTo(clampedOffset);
+      }
+    }
   }
 
   @override
@@ -134,6 +170,7 @@ class _MoveBottomSheetState extends ConsumerState<MoveBottomSheet> {
               const SizedBox(height: 8),
 
               SingleChildScrollView(
+                controller: _dateScrollController,
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 child: Row(
@@ -151,6 +188,7 @@ class _MoveBottomSheetState extends ConsumerState<MoveBottomSheet> {
                                 setState(() {
                                   _selectedDate = dateStr;
                                 });
+                                _scrollToDate(dateStr);
                               },
                         borderRadius: BorderRadius.circular(14),
                         child: AnimatedContainer(

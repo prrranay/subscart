@@ -7,14 +7,71 @@ import 'package:suscart_app/features/schedule/presentation/providers/schedule_pr
 
 import 'package:suscart_app/features/schedule/presentation/providers/cutoff_ticker_provider.dart';
 
-class DateSelectorStrip extends ConsumerWidget {
+class DateSelectorStrip extends ConsumerStatefulWidget {
   const DateSelectorStrip({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DateSelectorStrip> createState() => _DateSelectorStripState();
+}
+
+class _DateSelectorStripState extends ConsumerState<DateSelectorStrip> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelectedDate(animate: false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToSelectedDate({bool animate = true}) {
+    if (!_scrollController.hasClients) return;
+    final availableDates = ref.read(scheduleDatesProvider);
+    final selectedDate = ref.read(selectedDateProvider);
+    if (selectedDate == null) return;
+
+    final idx = availableDates.indexOf(selectedDate);
+    if (idx != -1) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      final targetOffset = (idx * 66.0) - (screenWidth / 2) + 33.0;
+      final clampedOffset = targetOffset.clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+
+      if (animate) {
+        _scrollController.animateTo(
+          clampedOffset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _scrollController.jumpTo(clampedOffset);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final availableDates = ref.watch(scheduleDatesProvider);
     final selectedDate = ref.watch(selectedDateProvider);
     final scheduleData = ref.watch(scheduleNotifierProvider).data;
+
+    // Listen to selectedDate changes to smoothly auto-scroll
+    ref.listen<String?>(selectedDateProvider, (prev, next) {
+      if (next != null && next != prev) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToSelectedDate(animate: true);
+        });
+      }
+    });
 
     if (availableDates.isEmpty) {
       return const SizedBox.shrink();
@@ -23,6 +80,7 @@ class DateSelectorStrip extends ConsumerWidget {
     return SizedBox(
       height: 96,
       child: ListView.separated(
+        controller: _scrollController,
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 4),

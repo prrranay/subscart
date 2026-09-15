@@ -549,15 +549,29 @@ final selectedDateOrdersProvider = Provider<List<ScheduledOrderModel>>((ref) {
       .toList();
 });
 
-/// Provider for distinct schedule dates
+/// Provider for distinct schedule dates (contiguous sequence across the cycle)
 final scheduleDatesProvider = Provider<List<String>>((ref) {
   final scheduleState = ref.watch(scheduleNotifierProvider);
-  if (scheduleState.data == null) return [];
+  if (scheduleState.data == null || scheduleState.data!.orders.isEmpty) return [];
 
-  final dateSet = <String>{};
-  for (final order in scheduleState.data!.orders) {
-    dateSet.add(order.deliveryDate);
+  final rawDates = scheduleState.data!.orders.map((o) => o.deliveryDate).toList()..sort();
+  if (rawDates.isEmpty) return [];
+
+  final minDate = DateTime.tryParse(rawDates.first) ?? DateTime.now();
+  final maxDate = DateTime.tryParse(rawDates.last) ?? minDate.add(const Duration(days: 13));
+
+  // Generate contiguous sequence of every single date between minDate and maxDate
+  final List<String> contiguousDates = [];
+  var current = DateTime(minDate.year, minDate.month, minDate.day);
+  final end = DateTime(maxDate.year, maxDate.month, maxDate.day);
+
+  while (!current.isAfter(end)) {
+    final yyyy = current.year.toString().padLeft(4, '0');
+    final mm = current.month.toString().padLeft(2, '0');
+    final dd = current.day.toString().padLeft(2, '0');
+    contiguousDates.add('$yyyy-$mm-$dd');
+    current = current.add(const Duration(days: 1));
   }
-  final list = dateSet.toList()..sort();
-  return list;
+
+  return contiguousDates;
 });
