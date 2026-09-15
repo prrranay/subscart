@@ -53,22 +53,52 @@ class DateFormatter {
     }
   }
 
-  /// Formats remaining duration into "02h 14m remaining" or "45m remaining"
+  /// Formats remaining duration into "3d 4h remaining", "02h 14m remaining", or "45m 12s remaining"
   static String formatRemaining(Duration remaining) {
     if (remaining.isNegative || remaining.inSeconds <= 0) {
       return 'Editing closed';
     }
 
-    final hours = remaining.inHours;
+    final days = remaining.inDays;
+    final hours = remaining.inHours % 24;
     final minutes = remaining.inMinutes % 60;
     final seconds = remaining.inSeconds % 60;
 
-    if (hours > 0) {
+    if (days > 0) {
+      final dayLabel = days == 1 ? '1 day' : '$days days';
+      if (hours > 0) {
+        return '$dayLabel ${hours}h remaining';
+      }
+      return '$dayLabel remaining';
+    } else if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}h ${minutes.toString().padLeft(2, '0')}m remaining';
     } else if (minutes > 0) {
       return '${minutes.toString().padLeft(2, '0')}m ${seconds.toString().padLeft(2, '0')}s remaining';
     } else {
       return '${seconds}s remaining';
+    }
+  }
+
+  /// Formats cutoff deadline relative to delivery or today: e.g. "today, 8:30 PM", "tomorrow, 8:30 PM", or "24 Sep, 8:30 PM"
+  static String formatCutoffDeadline(DateTime cutoffDate) {
+    try {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final targetDay = DateTime(cutoffDate.year, cutoffDate.month, cutoffDate.day);
+      final differenceInDays = targetDay.difference(today).inDays;
+
+      final timeStr = DateFormat('h:mm a').format(cutoffDate);
+
+      if (differenceInDays == 0) {
+        return 'today, $timeStr';
+      } else if (differenceInDays == 1) {
+        return 'tomorrow, $timeStr';
+      } else {
+        final dateStr = DateFormat('d MMM').format(cutoffDate);
+        return '$dateStr, $timeStr';
+      }
+    } catch (_) {
+      return '8:30 PM';
     }
   }
 }

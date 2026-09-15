@@ -13,12 +13,14 @@ class CutoffStatus {
   final bool isPassed;
   final Duration remaining;
   final String formattedRemaining;
+  final String formattedDeadline;
   final String? cutoffAtUtc;
 
   const CutoffStatus({
     required this.isPassed,
     required this.remaining,
     required this.formattedRemaining,
+    this.formattedDeadline = '8:30 PM',
     this.cutoffAtUtc,
   });
 }
@@ -30,25 +32,44 @@ final orderCutoffProvider =
   ref.watch(tickerProvider);
 
   if (order.cutoffAtUtc == null || order.cutoffAtUtc!.isEmpty) {
-    return const CutoffStatus(
-      isPassed: false,
-      remaining: Duration.zero,
-      formattedRemaining: '',
-    );
+    try {
+      final del = DateTime.parse(order.deliveryDate);
+      final dayBefore = del.subtract(const Duration(days: 1));
+      // Assume 8:30 PM local on prior day
+      final cutoffLocal = DateTime(dayBefore.year, dayBefore.month, dayBefore.day, 20, 30);
+      final diff = cutoffLocal.difference(DateTime.now());
+      final isPassed = diff.isNegative || diff.inSeconds <= 0;
+      return CutoffStatus(
+        isPassed: isPassed,
+        remaining: diff.isNegative ? Duration.zero : diff,
+        formattedRemaining: DateFormatter.formatRemaining(diff),
+        formattedDeadline: DateFormatter.formatCutoffDeadline(cutoffLocal),
+      );
+    } catch (_) {
+      return const CutoffStatus(
+        isPassed: false,
+        remaining: Duration.zero,
+        formattedRemaining: '',
+        formattedDeadline: '8:30 PM',
+      );
+    }
   }
 
   try {
     final cutoffUtc = DateTime.parse(order.cutoffAtUtc!).toUtc();
+    final cutoffLocal = cutoffUtc.toLocal();
     final nowUtc = DateTime.now().toUtc();
     final difference = cutoffUtc.difference(nowUtc);
 
     final isPassed = difference.isNegative || difference.inSeconds <= 0;
     final formatted = DateFormatter.formatRemaining(difference);
+    final deadlineFormatted = DateFormatter.formatCutoffDeadline(cutoffLocal);
 
     return CutoffStatus(
       isPassed: isPassed,
       remaining: difference.isNegative ? Duration.zero : difference,
       formattedRemaining: formatted,
+      formattedDeadline: deadlineFormatted,
       cutoffAtUtc: order.cutoffAtUtc,
     );
   } catch (e) {
@@ -56,6 +77,7 @@ final orderCutoffProvider =
       isPassed: false,
       remaining: Duration.zero,
       formattedRemaining: '',
+      formattedDeadline: '8:30 PM',
     );
   }
 });

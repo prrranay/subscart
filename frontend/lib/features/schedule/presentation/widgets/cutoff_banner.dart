@@ -18,18 +18,50 @@ class CutoffBanner extends ConsumerWidget {
     final cutoffStatus = ref.watch(orderCutoffProvider(order));
 
     final isPassed = cutoffStatus.isPassed || order.isCutoffPassed;
+    final remainingHours = cutoffStatus.remaining.inHours;
+
+    // Color tier configuration
+    final Color backgroundColor;
+    final Color borderColor;
+    final Color contentColor;
+    final IconData iconData;
+
+    if (isPassed) {
+      backgroundColor = AppColors.surfaceContainerHigh;
+      borderColor = AppColors.outlineVariant.withOpacity(0.5);
+      contentColor = AppColors.onSurfaceVariant;
+      iconData = Icons.lock_clock_outlined;
+    } else if (remainingHours >= 24) {
+      // Far (> 24 hours): calm, confident botanical green
+      backgroundColor = const Color(0xFFEBF7EE);
+      borderColor = const Color(0xFFA5D6A7).withOpacity(0.8);
+      contentColor = const Color(0xFF1B5E20);
+      iconData = Icons.schedule_rounded;
+    } else if (remainingHours >= 6) {
+      // Approaching (6h - 24h): warm attention amber
+      backgroundColor = const Color(0xFFFFF8E1);
+      borderColor = const Color(0xFFFFE082);
+      contentColor = const Color(0xFF92400E);
+      iconData = Icons.access_time_filled_rounded;
+    } else {
+      // Urgent (< 6h): high-priority terracotta alert
+      backgroundColor = AppColors.tertiaryFixed;
+      borderColor = AppColors.tertiaryAccent.withOpacity(0.4);
+      contentColor = AppColors.onTertiaryFixedVariant;
+      iconData = Icons.bolt_rounded;
+    }
+
+    final displayText = isPassed
+        ? 'Editing closed for this order'
+        : 'Edits allowed until ${cutoffStatus.formattedDeadline} • ${cutoffStatus.formattedRemaining}';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isPassed
-            ? AppColors.surfaceContainerHigh
-            : AppColors.tertiaryFixed,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isPassed
-              ? AppColors.outlineVariant.withOpacity(0.5)
-              : AppColors.tertiaryAccent.withOpacity(0.3),
+          color: borderColor,
           width: 0.8,
         ),
       ),
@@ -37,22 +69,16 @@ class CutoffBanner extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isPassed ? Icons.lock_clock_outlined : Icons.bolt_rounded,
+            iconData,
             size: 13,
-            color: isPassed
-                ? AppColors.onSurfaceVariant
-                : AppColors.onTertiaryFixedVariant,
+            color: contentColor,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Flexible(
             child: Text(
-              isPassed
-                  ? 'Editing closed for this order'
-                  : 'Edits allowed until 8:30 PM • ${cutoffStatus.formattedRemaining}',
+              displayText,
               style: AppTypography.labelSmall.copyWith(
-                color: isPassed
-                    ? AppColors.onSurfaceVariant
-                    : AppColors.onTertiaryFixedVariant,
+                color: contentColor,
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
               ),
