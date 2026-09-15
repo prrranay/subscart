@@ -146,5 +146,3 @@ subscart/
 
 ---
 
-## 🛡️ License
-UNLICENSED - Antigravity Assessment Project.
