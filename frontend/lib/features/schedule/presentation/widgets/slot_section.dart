@@ -216,9 +216,11 @@ class SlotSection extends StatelessWidget {
           // Meal Card
           MealCard(order: order!),
 
-          // Add Extra Products Button
-          const SizedBox(height: 12),
-          const ExtraProductsButton(),
+          // Add Extra Products Button (only for active, editable orders)
+          if (!isCutoffPassed && !order!.isCutoffPassed) ...[
+            const SizedBox(height: 12),
+            const ExtraProductsButton(),
+          ],
         ],
       ),
     );
