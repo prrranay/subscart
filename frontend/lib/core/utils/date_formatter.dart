@@ -53,7 +53,7 @@ class DateFormatter {
     }
   }
 
-  /// Formats remaining duration into "3d 4h remaining", "02h 14m remaining", or "45m 12s remaining"
+  /// Formats remaining duration into concise format: "7d 19h left", "02h 14m left", or "45m 12s left"
   static String formatRemaining(Duration remaining) {
     if (remaining.isNegative || remaining.inSeconds <= 0) {
       return 'Editing closed';
@@ -65,17 +65,16 @@ class DateFormatter {
     final seconds = remaining.inSeconds % 60;
 
     if (days > 0) {
-      final dayLabel = days == 1 ? '1 day' : '$days days';
       if (hours > 0) {
-        return '$dayLabel ${hours}h remaining';
+        return '${days}d ${hours}h left';
       }
-      return '$dayLabel remaining';
+      return '${days}d left';
     } else if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}h ${minutes.toString().padLeft(2, '0')}m remaining';
+      return '${hours}h ${minutes.toString().padLeft(2, '0')}m left';
     } else if (minutes > 0) {
-      return '${minutes.toString().padLeft(2, '0')}m ${seconds.toString().padLeft(2, '0')}s remaining';
+      return '${minutes}m ${seconds.toString().padLeft(2, '0')}s left';
     } else {
-      return '${seconds}s remaining';
+      return '${seconds}s left';
     }
   }
 

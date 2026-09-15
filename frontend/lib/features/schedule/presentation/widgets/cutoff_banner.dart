@@ -53,7 +53,7 @@ class CutoffBanner extends ConsumerWidget {
 
     final displayText = isPassed
         ? 'Editing closed for this order'
-        : 'Edits allowed until ${cutoffStatus.formattedDeadline} • ${cutoffStatus.formattedRemaining}';
+        : 'Edits until ${cutoffStatus.formattedDeadline} • ${cutoffStatus.formattedRemaining}';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
