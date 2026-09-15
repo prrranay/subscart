@@ -7,6 +7,8 @@ import 'package:suscart_app/features/schedule/presentation/widgets/meal_card.dar
 import 'package:suscart_app/features/schedule/presentation/widgets/cutoff_banner.dart';
 import 'package:suscart_app/features/schedule/presentation/widgets/extra_products_button.dart';
 
+import 'package:suscart_app/features/schedule/presentation/providers/cutoff_ticker_provider.dart';
+
 class SlotSection extends StatelessWidget {
   final MealSlot slot;
   final ScheduledOrderModel? order;
@@ -22,6 +24,7 @@ class SlotSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasOrder = order != null;
+    final isCutoffPassed = isTargetDateCutoffPassed(dateStr);
 
     if (!hasOrder) {
       // Empty Unscheduled Slot placeholder
@@ -29,10 +32,12 @@ class SlotSection extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
+          color: isCutoffPassed
+              ? AppColors.surfaceContainerHigh.withOpacity(0.35)
+              : AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.outlineVariant.withOpacity(0.3),
+            color: AppColors.outlineVariant.withOpacity(0.25),
           ),
         ),
         child: Row(
@@ -41,12 +46,16 @@ class SlotSection extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainer,
+                color: isCutoffPassed
+                    ? AppColors.surfaceContainerHigh.withOpacity(0.5)
+                    : AppColors.surfaceContainer,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 _getSlotIcon(slot),
-                color: AppColors.onSurfaceVariant,
+                color: isCutoffPassed
+                    ? AppColors.onSurfaceVariant.withOpacity(0.5)
+                    : AppColors.onSurfaceVariant,
                 size: 20,
               ),
             ),
@@ -59,45 +68,87 @@ class SlotSection extends StatelessWidget {
                     '${slot.displayName} (${slot.timeWindow})',
                     style: AppTypography.titleMedium.copyWith(
                       fontWeight: FontWeight.w700,
+                      color: isCutoffPassed
+                          ? AppColors.onSurfaceVariant.withOpacity(0.7)
+                          : AppColors.onSurface,
                     ),
                   ),
                   Text(
-                    'No meal scheduled for this slot',
+                    isCutoffPassed
+                        ? 'No meal was scheduled'
+                        : 'No meal scheduled for this slot',
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: AppColors.onSurfaceVariant.withOpacity(0.7),
                     ),
                   ),
                 ],
               ),
             ),
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (isCutoffPassed)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerHigh.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.outlineVariant.withOpacity(0.3),
+                  ),
                 ),
-                side: BorderSide(
-                  color: AppColors.outlineVariant.withOpacity(0.4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 12,
+                      color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Closed',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10.5,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Select an available bowl or warm plate to add to ${slot.displayName}.',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.inverseOnSurface),
+              )
+            else
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryContainer.withOpacity(0.12),
+                  foregroundColor: AppColors.primary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: AppColors.primaryContainer.withOpacity(0.35),
+                      width: 1,
                     ),
                   ),
-                );
-              },
-              child: Text(
-                '+ Add Meal',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Select an available gourmet meal to add to ${slot.displayName}.',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.inverseOnSurface),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: Text(
+                  '+ Add Meal',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11.5,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       );
