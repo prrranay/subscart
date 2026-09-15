@@ -216,18 +216,19 @@ class MealCard extends ConsumerWidget {
                             ),
                         ],
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 5),
                       Text(
                         meal?.description.isNotEmpty == true
                             ? meal!.description
                             : 'Freshly prepared nutrient-dense ingredients.',
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.onSurfaceVariant,
+                          height: 1.3,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
 
                       // Macro Pills
                       Wrap(
@@ -246,7 +247,7 @@ class MealCard extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             // Eco packaging label
             Row(
@@ -256,7 +257,7 @@ class MealCard extends ConsumerWidget {
                   size: 14,
                   color: AppColors.secondary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 5),
                 Flexible(
                   child: Text(
                     'Packed in 100% compostable sugarcane bowl',
@@ -271,11 +272,11 @@ class MealCard extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             // Secondary Quick Action Trio: Skip, Swap, Move (or Undo if Skipped)
             Container(
-              padding: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(

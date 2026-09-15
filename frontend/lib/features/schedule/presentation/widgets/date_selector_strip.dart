@@ -5,6 +5,8 @@ import 'package:suscart_app/core/theme/app_typography.dart';
 import 'package:suscart_app/core/utils/date_formatter.dart';
 import 'package:suscart_app/features/schedule/presentation/providers/schedule_provider.dart';
 
+import 'package:suscart_app/features/schedule/presentation/providers/cutoff_ticker_provider.dart';
+
 class DateSelectorStrip extends ConsumerWidget {
   const DateSelectorStrip({super.key});
 
@@ -12,6 +14,7 @@ class DateSelectorStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final availableDates = ref.watch(scheduleDatesProvider);
     final selectedDate = ref.watch(selectedDateProvider);
+    final scheduleData = ref.watch(scheduleNotifierProvider).data;
 
     if (availableDates.isEmpty) {
       return const SizedBox.shrink();
@@ -30,6 +33,18 @@ class DateSelectorStrip extends ConsumerWidget {
           final isSelected = dateStr == selectedDate;
           final weekday = DateFormatter.formatWeekday(dateStr);
           final dayNum = DateFormatter.formatDayNum(dateStr);
+
+          // Check if date is completed / past / cutoff passed
+          final ordersForDate = scheduleData?.orders.where((o) => o.deliveryDate == dateStr).toList() ?? [];
+          final isAllOrdersPassed = ordersForDate.isNotEmpty && ordersForDate.every((o) => o.isCutoffPassed);
+          final isCutoffPassed = isTargetDateCutoffPassed(dateStr) || isAllOrdersPassed;
+
+          final Color dotColor;
+          if (isCutoffPassed) {
+            dotColor = isSelected ? AppColors.tertiaryAccent : const Color(0xFFE57373);
+          } else {
+            dotColor = isSelected ? AppColors.secondaryFixed : AppColors.secondaryLight.withOpacity(0.85);
+          }
 
           return GestureDetector(
             onTap: () {
@@ -76,7 +91,9 @@ class DateSelectorStrip extends ConsumerWidget {
                     style: AppTypography.labelSmall.copyWith(
                       color: isSelected
                           ? AppColors.primaryFixed
-                          : AppColors.onSurfaceVariant,
+                          : (isCutoffPassed
+                              ? AppColors.onSurfaceVariant.withOpacity(0.65)
+                              : AppColors.onSurfaceVariant),
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
@@ -96,21 +113,21 @@ class DateSelectorStrip extends ConsumerWidget {
                       style: AppTypography.bodyMedium.copyWith(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.onSurface,
+                            : (isCutoffPassed
+                                ? AppColors.onSurface.withOpacity(0.65)
+                                : AppColors.onSurface),
                         fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Matcha allocation dot
+                  // Status Dot: Red for locked/completed dates, Green for active
                   Container(
                     width: isSelected ? 7 : 5,
                     height: isSelected ? 7 : 5,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected
-                          ? AppColors.secondaryFixed
-                          : AppColors.secondaryLight.withOpacity(0.7),
+                      color: dotColor,
                       border: isSelected
                           ? Border.all(color: AppColors.primaryContainer, width: 1.5)
                           : null,

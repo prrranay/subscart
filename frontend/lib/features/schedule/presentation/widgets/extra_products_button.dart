@@ -51,7 +51,7 @@ class ExtraProductsButton extends StatelessWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                '+ Add Extra Products (Snacks, Juices, Boosts)',
+                '+ Add Extra Products',
                 style: AppTypography.labelSmall.copyWith(
                   color: AppColors.secondary,
                   fontWeight: FontWeight.w700,
