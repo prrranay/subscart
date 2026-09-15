@@ -194,7 +194,7 @@ class SubscriptionHeader extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
-                            '+ Add Slots',
+                            'Add Slots',
                             style: AppTypography.labelMedium.copyWith(
                               color: AppColors.onPrimary,
                               fontWeight: FontWeight.w700,
